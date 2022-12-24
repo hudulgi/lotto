@@ -51,8 +51,8 @@ selenium / seleniarm 차이
 
   전체 예)
   ```
-  maunal : 8, 28, 12, 9, 10, 33
-  #maunal : 8, 28, 12, 9
+  manual : 8, 28, 12, 9, 10, 33
+  #manual : 8, 28, 12, 9
   auto
   plugin_auto
   plugin_auto
