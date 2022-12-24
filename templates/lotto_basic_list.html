@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div id='page1'></div>
+
+{{ macros.m_hr_head_top() }}
+{{ macros.m_row_start('0') }}
+{{ macros.m_col(3,  macros.m_strong('Img')) }}
+{{ macros.m_col(9,  macros.m_strong('Info')) }}
+{{ macros.m_row_end() }}
+{{ macros.m_hr_head_bottom() }}
+<div id="list_div"></div>
+<div id='page2'></div>
+
+<script type="text/javascript">
+var last_list_option = "{{arg['smi2srt_item_last_list_option']}}";
+
+$(document).ready(function(){
+  tmp = last_list_option.split('|');
+  if (tmp.length == 5) {
+    $("#order").val(tmp[0]);
+    $("#keyword").val(tmp[2]);
+    $("#option1").val(tmp[3]);
+    //$("#option2").val(tmp[4]);
+    globalRequestSearch(tmp[1]);
+  } else {
+    globalRequestSearch('1');
+  }
+});
+
+
+function make_list(data) {
+  str = ''
+  for (i in data) {
+    console.log(data[i]);
+    str += j_row_start();
+    
+    tmp = '<div><img src="'+data[i].img+'" class="img-fluid thumbnail head_pic"><img src="'+data[i].img+'" class="before"></div>';
+    str += j_col(2, tmp);
+    str += j_col(1, data[i].id);
+    str += j_col(2, data[i].created_time);
+
+    str += j_col(1, data[i].round);
+    str += j_col(1, data[i].count);
+    
+    tmp = '';
+    for (j in data[i].data.buy.buy_list) {
+      tmp += data[i].data.buy.buy_list[j] + '\n'
+    }
+
+    str += j_col(3, j_pre(tmp));
+
+    tmp = ''
+    tmp += j_button('globalDbDeleteItemBtn', 'DB 삭제', {'id':data[i].id}, 'primary');
+    tmp += j_button('globalJsonBtn', 'JSON', {'idx':i}, 'primary');
+    tmp = j_button_group(tmp)
+    str += j_col(2, tmp, 'center')
+
+    str += j_row_end();
+    if (i != data.length -1) str += j_hr();
+  }
+  $("#list_div").html(str);
+}
+
+$('body').on('mouseover', '.head_pic', (e)=>{
+  e.target.nextElementSibling.classList.remove('before');
+  e.target.nextElementSibling.classList.add('after');
+});
+
+$('body').on('mouseout', '.head_pic', (e)=>{
+  e.target.nextElementSibling.classList.remove('after');
+  e.target.nextElementSibling.classList.add('before');
+});
+
+</script>    
+<style>
+  
+  .before{
+    display: none;
+  }
+
+  .after{
+    position: absolute;
+    display: inline;
+    left: 150px;
+    top: 20px;
+    z-index: 1;
+  }
+</style>
+
+{% endblock %}

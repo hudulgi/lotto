@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+
+{{ macros.m_button_group([['globalSettingSaveBtn', '설정 저장'], ['globalOneExecuteBtn', '1회 실행'], ['globalImmediatelyExecuteBtn', '즉시 실행']])}}
+{{ macros.m_row_start('5') }}
+{{ macros.m_row_end() }}
+
+<nav>
+  {{ macros.m_tab_head_start() }}
+    {{ macros.m_tab_head('normal', '기본', true) }}
+    {{ macros.m_tab_head('auto', '자동', false) }}
+    {{ macros.m_tab_head('db', 'DB', false) }}
+  {{ macros.m_tab_head_end() }}
+</nav>
+<form id='setting'>
+  <div class="tab-content" id="nav-tabContent">
+    {{ macros.m_tab_content_start('normal', true) }}
+      {{ macros.setting_input_text('user_id', 'ID', desc=None, value=arg['user_id'], col=3) }}
+      {{ macros.setting_input_text('user_passwd', 'PW', desc=None, value=arg['user_passwd'], col=3, type="password") }}
+      {{ macros.setting_radio_with_value('notify_mode', '알림 모드', [['none', '없음'], ['always', '항상'], ['real_buy', '실제 구입시. 예치금 부족']], desc=['메시지 ID : lotto'], value=arg['notify_mode']) }}
+      {{ macros.m_hr() }}
+      {{ macros.setting_radio_with_value('driver_mode', 'Selenium 드라이버 모드', [['local', '로컬'], ['remote', '리모트']], desc=None, value=arg['driver_mode']) }}
+      <div id="local_div" class="collapse">
+      {{ macros.setting_checkbox('driver_local_headless', '헤드리스 모드', value=arg['driver_local_headless'], desc=['On: 크롬이 화면에 표시되지 않음']) }}
+      </div>
+      <div id="remote_div" class="collapse">
+      {{ macros.setting_input_text('driver_remote_url', 'ID', desc=None, value=arg['driver_remote_url']) }}
+      </div>
+      {{ macros.m_hr() }}
+      {{ macros.setting_input_textarea('buy_data', '자동 구입 정보', desc=None, row=5, value=arg['buy_data']) }}
+      {{ macros.setting_checkbox('buy_mode_one_of_week', '5건 구입 가능할 경우만 구입', value=arg['buy_mode_one_of_week'], desc=['On: 금주 회차 구입하지 않는 경우만 구입. 예) 매주 한게임씩 구입하는 경우', 'Off: 구입 가능 건수가 남은 경우 구입']) }}
+      {{ macros.m_hr() }}
+      {{ macros.setting_buttons([['test_info_btn', '기본 테스트'], ['test_buy_btn', '구입 테스트']], "테스트 버튼") }}
+    {{ macros.m_tab_content_end() }}  
+    {{ macros.m_tab_content_start('auto', false) }}
+      {{ macros.global_setting_scheduler_button(arg['is_include'], arg['is_running']) }}
+      {{ macros.setting_input_text('basic_interval', '스케쥴링 실행 정보', value=arg['basic_interval'], col='3', desc=['Inverval(minute 단위)이나 Cron 설정']) }}
+      {{ macros.setting_checkbox('basic_auto_start', '시작시 자동실행', value=arg['basic_auto_start'], desc='On : 시작시 자동으로 스케쥴러에 등록됩니다.') }}
+    {{ macros.m_tab_content_end() }}
+    {{ macros.m_tab_content_start('db', false) }}
+      {{ macros.setting_input_text_and_buttons('basic_db_delete_day', 'DB 삭제 기간', [['globalDbDeleteDayBtn', '기간 적용 삭제', [['tag_id','basic_db_delete_day']]], ['globalDbDeleteBtn', '전체 삭제']], value=arg['basic_db_delete_day'], col='6') }} 
+      {{ macros.setting_checkbox('basic_db_auto_delete', 'DB 자동 삭제', value=arg['basic_db_auto_delete'], desc=['On : 기간 적용하여 DB를 자동 삭제합니다.']) }}
+    {{ macros.m_tab_content_end() }} 
+  </div>
+</form>
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+  set_driver_mode($("input[name='driver_mode']:checked").val());
+});
+
+$('input[type=radio][name=driver_mode]').change(function() {
+  set_driver_mode(this.value);
+});
+
+function set_driver_mode(type) {
+  $('input[name=driver_mode][value="' + type + '"]').attr('checked', true);
+  if ( type == 'local') {
+    $('#local_div').collapse('show');
+    $('#remote_div').collapse('hide');
+  } else {
+    $('#local_div').collapse('hide');
+    $('#remote_div').collapse('show');
+  }
+}
+
+$("body").on('click', '#test_info_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('test_info', null, null, null, function(ret) {
+    var html = $('#modal_body').html();
+    var str = '<img src="data:image/png;base64,'+ret['data']['history']['screen_shot']+'" class="img-fluid rounded">';
+    str = html + '<br>' + str;
+    $('#modal_body').html(str);
+  });
+});
+
+$("body").on('click', '#test_buy_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('test_buy', null, null, null, function(ret) {
+    var html = $('#modal_body').html();
+    if (ret.data.buy != null) {
+      var str = '<img src="data:image/png;base64,'+ret['data']['buy']['screen_shot']+'" class="img-fluid rounded">';
+      str = html + '<br>' + str;
+      $('#modal_body').html(str);
+    }
+  });
+});
+
+</script>    
+{% endblock %}
