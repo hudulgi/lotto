@@ -5,7 +5,7 @@ setting = {
     'home_module': None,
     'menu': {
         'uri': __package__,
-        'name': '로또 구매',
+        'name': '로또 구매2',
         'list': [
             {
                 'uri': 'basic/setting',

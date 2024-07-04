@@ -1,9 +1,10 @@
 import base64
 import random
+import os
+import time
 from io import BytesIO
 
 from PIL import Image
-from support import SupportDiscord
 from tool import ToolNotify
 
 from .ff_pylotto import DhLottery
@@ -47,9 +48,8 @@ class ModuleBasic(PluginModuleBase):
         if command == 'test_info' or command == 'test_buy':
             data = self.do_action(mode=command)
             if data['status'] == 'fail':
-                ret['modal'] = d(data['data'])
+                ret['modal'] = d(data.get('log', '알 수 없는 오류가 발생했습니다.'))
                 ret['title'] = '에러'
-                ret['data'] = data
             else:
                 ret['modal'] = f"예치금 : {data['deposit']}"
                 ret['modal'] += f"\n이미 구입 : {data['history']['count']}건 (미추첨)"
@@ -57,7 +57,7 @@ class ModuleBasic(PluginModuleBase):
                 if 'buy' in data:
                     ret['modal'] += f"\n회차 : {data['buy']['round']}"
                 ret['title'] = "테스트"
-                ret['data'] = data
+            ret['data'] = data
         return jsonify(ret)
 
     def scheduler_function(self):
@@ -86,10 +86,20 @@ class ModuleBasic(PluginModuleBase):
 
             if 'buy' in ret and len(ret['buy']['buy_list']) > 0:
                 img_bytes = base64.b64decode(ret['buy']['screen_shot'])
-                filepath = os.path.join(F.config['path_data'], 'tmp', f"proxy_{str(time.time())}.png")
+                
+                # 이미지를 static/image 폴더에 저장
+                image_folder = os.path.join(F.config['path_data'], 'static', 'image')
+                os.makedirs(image_folder, exist_ok=True)
+                
+                filename = f"lotto_{ret['buy']['round']}_{int(time.time())}.png"
+                filepath = os.path.join(image_folder, filename)
+                
                 img = Image.open(BytesIO(img_bytes))
                 img.save(filepath)
-                img_url = SupportDiscord.discord_proxy_image_localfile(filepath)
+                
+                # 웹에서 접근 가능한 URL 생성 (lotto2 제거)
+                img_url = f"/static/image/{filename}"
+                
                 if noti_mode == 'real_buy':
                     notify = True
                 db_item = ModelLottoItem()
@@ -155,7 +165,6 @@ class ModuleBasic(PluginModuleBase):
             ret['log'] = str(traceback.format_exc())
         finally:
             lotto.driver_quit()
-            #P.logger.debug(d(ret))
         return ret
 
     @staticmethod
