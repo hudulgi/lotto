@@ -47,9 +47,8 @@ class ModuleBasic(PluginModuleBase):
         if command == 'test_info' or command == 'test_buy':
             data = self.do_action(mode=command)
             if data['status'] == 'fail':
-                ret['modal'] = d(data['data'])
+                ret['modal'] = d(data.get('log', '알 수 없는 오류가 발생했습니다.'))
                 ret['title'] = '에러'
-                ret['data'] = data
             else:
                 ret['modal'] = f"예치금 : {data['deposit']}"
                 ret['modal'] += f"\n이미 구입 : {data['history']['count']}건 (미추첨)"
@@ -57,7 +56,7 @@ class ModuleBasic(PluginModuleBase):
                 if 'buy' in data:
                     ret['modal'] += f"\n회차 : {data['buy']['round']}"
                 ret['title'] = "테스트"
-                ret['data'] = data
+            ret['data'] = data
         return jsonify(ret)
 
     def scheduler_function(self):
