@@ -1,9 +1,10 @@
 import base64
 import random
+import os
+import time
 from io import BytesIO
 
 from PIL import Image
-from support import SupportDiscord
 from tool import ToolNotify
 
 from .ff_pylotto import DhLottery
@@ -85,10 +86,20 @@ class ModuleBasic(PluginModuleBase):
 
             if 'buy' in ret and len(ret['buy']['buy_list']) > 0:
                 img_bytes = base64.b64decode(ret['buy']['screen_shot'])
-                filepath = os.path.join(F.config['path_data'], 'tmp', f"proxy_{str(time.time())}.png")
+                
+                # 이미지를 static/image 폴더에 저장
+                image_folder = os.path.join(F.config['path_data'], 'static', 'image')
+                os.makedirs(image_folder, exist_ok=True)
+                
+                filename = f"lotto_{ret['buy']['round']}_{int(time.time())}.png"
+                filepath = os.path.join(image_folder, filename)
+                
                 img = Image.open(BytesIO(img_bytes))
                 img.save(filepath)
-                img_url = SupportDiscord.discord_proxy_image_localfile(filepath)
+                
+                # 웹에서 접근 가능한 URL 생성 (lotto2 제거)
+                img_url = f"/static/image/{filename}"
+                
                 if noti_mode == 'real_buy':
                     notify = True
                 db_item = ModelLottoItem()
@@ -154,7 +165,6 @@ class ModuleBasic(PluginModuleBase):
             ret['log'] = str(traceback.format_exc())
         finally:
             lotto.driver_quit()
-            #P.logger.debug(d(ret))
         return ret
 
     @staticmethod
